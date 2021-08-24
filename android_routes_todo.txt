@@ -1,0 +1,185 @@
+exe/login_and.php
+
+
+exe/check_qr.php
+exe_snap_photo
+exe_check_receipt_local.php
+
+exe request otp
+exe verify otp
+
+// TOCHANGE
+send trans_string to stopcamera
+sync check
+
+
+
+POST localhost/middleware/login
+
+	// user must have role as operator
+
+	expected params
+	{
+	    "name":"imran",
+	    "pass":"123456"
+	}
+
+	expected result
+	{
+	    "success": true,
+	    "rate_set": true,
+	    "petrol_rate": "104.21",
+	    "diesel_rate": "94.60",
+	    "user_id": "14",
+	    "pump_id": 1,
+	    "user_name": "imran",
+	    "date": "2021-06-28"
+	}
+
+	rates not set
+	{
+	    "success": true,
+	    "rate_set": false
+	    "user_id": "14",
+	    "pump_id": 1
+	}
+
+	passwrord error	
+	{
+	    "success": false,
+	    "msg": "Password Error"
+	}
+
+
+
+POST localhost/middleware/rates
+	
+	// unlike online prvent double login from android
+
+	expected params
+	{
+	    "petrol": 30,
+	    "diesel": 20,
+	    "pump_id" : 1,
+	    "user_id": 14
+	}
+
+	expected result
+	{
+	    "success": true,
+	    "rate_set": true,
+	    "petrol_rate": 30,
+	    "diesel_rate": 20,
+	    "user_id": 14,
+	    "pump_id": 1,
+	    "user_name": "imran",
+	    "date": "2021-06-28"
+	}
+
+	// if rate more than {set_rates_per_day}
+	{
+	    "success": false,
+	    "msg": "Rates already Set!"
+	}
+
+
+POST localhost/middleware/scan_car
+	
+	expected params
+	{
+	    "qr_code": "rNHKt2dvEY"    
+	}
+
+	expected result
+	{
+	    "success": true,
+	    "cust_id": "1",
+	    "cust_name": "Seed Infotech Ltd.",
+	    "car_no": "mh12hf8530",
+	    "car_id": "7",
+	    "car_fuel": "petrol"
+	}
+
+
+
+	// error states
+	{
+	    "success": false,
+	    "msg": "QR code is unassigned"
+	}
+
+	// invalid qr code
+	{
+	    "success": false,
+	    "msg": "QR code is invalid"
+	}
+
+	// inactive car
+	{
+	    "success": false,
+	    "msg": "Car is inactive"
+	}
+
+
+POST localhost/middleware/scan_pump
+
+	expected params 1
+	{
+	    "photo_type": "start",    
+	    "nozzle_qr": "4xzliayQPL"
+	}
+
+	expected result 1
+	{
+	    "success": true,
+	    "photo_url": "uploads/2021-06-28/e7jwqLE7Je_start.jpeg"
+	}
+
+	expected params 2
+	{
+	    "photo_type": "start",    
+	    "nozzle_qr": "4xzliayQPL"
+	}
+
+	expected result 1
+	{
+	    "success": true,
+	    "photo_url": "uploads/2021-06-28/e7jwqLE7Je_stop.jpeg"
+	}
+
+
+	// error states
+	{
+	    "message": "Invalid Nozzle QR"
+	}
+
+
+POST localhost/middleware/transactions
+
+
+
+
+GET localhost/middleware/customers
+		
+	expected result
+
+	[
+	    {
+	        "cust_id": "45",
+	        "cust_f_name": "milind",
+	        "cust_m_name": "",
+	        "cust_l_name": "deore",
+	        "cust_ph_no": "9850891546",
+	        "cust_pump_id": "1",
+	        "cust_car_num": "0",
+	        "cust_post_paid": "Y",
+	        "cust_balance": "0.00",
+	        "cust_outstanding": "0.00",
+	        "cust_company": "A G DIAGNOSTICS PVT LTD",
+	        "cust_gst": "27aaqca0978e1zf",
+	        "cust_credit_limit": "25000",
+	        "cust_last_updated": "2020-12-31 12:02:40"
+	    },
+	    ...
+	    ...
+	]

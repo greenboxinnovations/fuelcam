@@ -50,6 +50,8 @@ return function (App $app) {
 
     $app->get('/no_plate/{no_plate}', \App\VehiclePlateController::class);
 
+    $app->get('/latest_rate', \App\LatestRateController::class);
+
     // code doesnt not consider curl request failure
     // exe/request_otp.php
     // exe/verify_otp.php

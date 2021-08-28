@@ -69,6 +69,7 @@ final class VehiclePlateController
 
 		
         // HTTP response
+        //sleep(10);
         $otp_data = array("otp" => "working");
         $response->getBody()->write((string)json_encode($ret_array));
         return $response

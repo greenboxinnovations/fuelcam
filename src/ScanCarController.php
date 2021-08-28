@@ -75,6 +75,7 @@ final class ScanCarController
 
         // HTTP response
         // $otp_data = array("otp" => "working");
+        // sleep(3);
         $response->getBody()->write((string)json_encode($ret_array));
         return $response
             ->withHeader('Content-Type', 'application/json')

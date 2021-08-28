@@ -14,6 +14,7 @@ final class TransactionsController
 
     private $pdo;
     private $otp_timeout;
+    private $print;
 
     public function __construct(
         PDO $pdo,
@@ -23,6 +24,7 @@ final class TransactionsController
         $this->pump_id = $c->get('settings')['pump_id'];
         $this->num_set_rates_per_day =  $c->get('settings')['set_rates_per_day'];
         $this->android_double_entry_time_seconds =  $c->get('settings')['android_double_entry_time_seconds'];
+        $this->print = $c->get('settings')['print'];
         // $this->userOps = $userOps;
         // $this->otpOps = $otpVerify;
         // $this->tokenOps = $tokenOps;
@@ -48,7 +50,8 @@ final class TransactionsController
                 !array_key_exists("receipt_no", $postData) ||
                 !array_key_exists("nozzle_qr", $postData) ||
                 !array_key_exists("shift", $postData) ||
-                !array_key_exists("pump_id", $postData)
+                !array_key_exists("pump_id", $postData)||
+                !array_key_exists("print_num", $postData)
         ) {
             return $this->errorReturn($request, $response, "Access Denied");
         }
@@ -77,6 +80,7 @@ final class TransactionsController
 
         $nozzle_qr  = $request->getParsedBody()['nozzle_qr'];        
         $pump_id    = $request->getParsedBody()['pump_id'];
+        $print_num    = $request->getParsedBody()['print_num'];
 
 
 		// 1. DUPLICATE RECEIPT_NO TEMPORARY FIX
@@ -91,8 +95,10 @@ final class TransactionsController
         // 1. DUPLICATE RECEIPT_NO TEMPORARY FIX
         //$receipt_no = $this->setReceiptZeroIfDuplicate($receipt_no);
 
-        // 2. get trans_string from nozzle_qr
-        $trans_string = $this->getTransStringFromNozzleQR($nozzle_qr);
+        // 2. get trans_string, nozzle_no from nozzle_qr
+        $cam_data = $this->getTransStringFromNozzleQR($nozzle_qr);
+        $trans_string = $cam_data['trans_string'];
+        $nozzle_no = $cam_data['nozzle_no'];
         if($trans_string == -1){
             return $this->errorReturn($request, $response, "Nozzle QR trans_string error");
         }
@@ -109,10 +115,10 @@ final class TransactionsController
         }        
 
         // 5. insert transaction        
-        $this->insertTransaction($pump_id, $cust_id, $car_id, $user_id, $car_fuel, $amount, $fuel_rate, $liters, $shift, $trans_string, $receipt_no);
+        $trans_id = $this->insertTransaction($pump_id, $cust_id, $car_id, $user_id, $car_fuel, $amount, $fuel_rate, $liters, $shift, $trans_string, $receipt_no, $nozzle_no);
 
         // 6. print n receipts
-        //$this->printReceipts();
+        $this->printReceipts($trans_id,$print_num);
 
         // 7. update sync table
         
@@ -144,13 +150,18 @@ final class TransactionsController
     private function setReceiptZeroIfDuplicate($receipt_no){}
 
     private function getTransStringFromNozzleQR($nozzle_qr){
-        $stmt = $this->pdo->prepare('SELECT trans_string FROM cameras WHERE cam_qr_code = :nozzle_qr');
+
+        $ret_array = array();
+
+        $stmt = $this->pdo->prepare('SELECT nozzle_no, trans_string FROM cameras WHERE cam_qr_code = :nozzle_qr');
         $stmt->execute(['nozzle_qr'     => $nozzle_qr]);        
 		$row = $stmt->fetch();
         if (!$row) {
             return -1;
         }
-        return $row['trans_string'];        
+        $ret_array['trans_string'] = $row['trans_string'];
+        $ret_array['nozzle_no'] = $row['nozzle_no'];
+        return $ret_array;
     }
 
     // 1. check if last updated is more than 20 seconds
@@ -190,15 +201,17 @@ final class TransactionsController
 
     private function preventSameTransSameCarSameDay($pump_id, $cust_id, $car_id){}
 
-    private function insertTransaction($pump_id, $cust_id, $car_id, $user_id, $car_fuel, $amount, $fuel_rate, $liters, $shift, $trans_string, $receipt_no){
+    private function insertTransaction($pump_id, $cust_id, $car_id, $user_id, $car_fuel, $amount, $fuel_rate, $liters, $shift, $trans_string, $receipt_no, $nozzle_no){
 
-        $date 	= date("Y-m-d H:i:s");				
+        // $date 	= date("Y-m-d H:i:s");		
+        $date = $this->getDateFromCameras($trans_string);
 
-        $sql = "INSERT INTO `transactions` (`pump_id`,`cust_id`,`car_id`,`user_id`,`fuel`,`amount`,`rate`,`liters`,`date`,`last_updated`,`shift`,`trans_string`,`receipt_no`) 
-                VALUES (:field1,:field2,:field3,:field4,:field5,:field6,:field7,:field8,:field9,:field10,:field11,:field12,:field13);";
 
-        $stmt = $this->pdo->prepare('INSERT INTO transactions (pump_id, cust_id, car_id, user_id, fuel, amount, rate, liters, date, last_updated, shift, trans_string, receipt_no) 
-                                    VALUES (:pump_id, :cust_id, :car_id, :user_id, :fuel, :amount, :rate, :liters, :date, :last_updated, :shift, :trans_string, :receipt_no)');
+        // $sql = "INSERT INTO `transactions` (`pump_id`,`cust_id`,`car_id`,`user_id`,`fuel`,`amount`,`rate`,`liters`,`date`,`last_updated`,`shift`,`trans_string`,`receipt_no`) 
+        //         VALUES (:field1,:field2,:field3,:field4,:field5,:field6,:field7,:field8,:field9,:field10,:field11,:field12,:field13,:field14);";
+
+        $stmt = $this->pdo->prepare('INSERT INTO transactions (pump_id, cust_id, car_id, user_id, fuel, amount, rate, liters, date, last_updated, shift, trans_string, receipt_no, nozzle_no) 
+                                    VALUES (:pump_id, :cust_id, :car_id, :user_id, :fuel, :amount, :rate, :liters, :date, :last_updated, :shift, :trans_string, :receipt_no, :nozzle_no)');
         $stmt->execute([
             'pump_id'	    => $pump_id,
             'cust_id'	    => $cust_id,
@@ -212,7 +225,8 @@ final class TransactionsController
             'last_updated'	=> $date,
             'shift'	        => $shift,
             'trans_string'  => $trans_string,
-            'receipt_no'	=> $receipt_no
+            'receipt_no'	=> $receipt_no,
+            'nozzle_no'     => $nozzle_no
         ]);
 
         // get last trans-id and append S to it
@@ -220,9 +234,38 @@ final class TransactionsController
         $trans_id = $this->getLastTransId();
         $transaction_no = "P".$pump_id."S".$trans_id;
         $this->updateTransNo($transaction_no, $trans_id);
+        return $trans_id;
     }
 
-    private function printReceipts(){}
+    private function printReceipts($trans_id, $print_num){
+
+        if($this->print){
+
+            for($i=0;$i<$print_num;$i++){
+                $d = $this->httpGet("http://192.168.1.100/middleware/print.php?trans_id=".$trans_id);    
+            }
+        }
+        // if ($d == 200) {
+        //     return true;
+        // }
+        // return false;
+    }
+
+
+    private function httpGet($url)
+    {
+        $ch = curl_init();  
+     
+        curl_setopt($ch,CURLOPT_URL,$url);
+        curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);
+        curl_setopt($ch, CURLOPT_NOBODY, true);    // we don't need body
+        curl_setopt($ch, CURLOPT_TIMEOUT,1);
+        $output = curl_exec($ch);
+        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+     
+        curl_close($ch);
+        return $httpcode;
+    }
 
     private function isQRValid($qr_code){
         $stmt = $this->pdo->prepare('SELECT * FROM codes WHERE qr_code = :qr_code');
@@ -250,6 +293,19 @@ final class TransactionsController
             'transaction_no' => $transaction_no,
             'trans_id' => $trans_id
         ]);
+    }
+
+    
+    private function getDateFromCameras($trans_string){
+        $stmt = $this->pdo->prepare('SELECT date_time FROM cameras WHERE trans_string = :trans_string');        
+        $stmt->execute([
+            'trans_string' => $trans_string            
+        ]);
+        $row = $stmt->fetch();
+        if (!$row) {
+            return -1;
+        }
+        return $row['date_time'];
     }
     
 }

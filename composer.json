@@ -24,6 +24,7 @@
     "require": {
         "php": "^7.2 || ^8.0",
         "ext-json": "*",
+        "mike42/escpos-php": "^3.0",
         "monolog/monolog": "^2.2",
         "php-di/php-di": "^6.3",
         "slim/psr7": "^1.3",

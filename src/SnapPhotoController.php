@@ -52,6 +52,7 @@ final class SnapPhotoController
         $ret_array['success'] = false;
 
         $date = date('Y-m-d');
+        $date_time = date("Y-m-d H:i:s");
 
         // is nozzle_qr valid
         // if start generate unique trans-string
@@ -65,11 +66,13 @@ final class SnapPhotoController
         if($photo_type == 'start') {
             $trans_string = $this->generateRand();
 
-            $stmt = $this->pdo->prepare('UPDATE cameras SET status = 1, trans_string = :trans_string, type = :photo_type WHERE cam_qr_code = :nozzle_qr');
+            $stmt = $this->pdo->prepare('UPDATE cameras SET status = 1, trans_string = :trans_string, type = :photo_type, date = :date, date_time = :date_time WHERE cam_qr_code = :nozzle_qr');
             $stmt->execute([
                 'trans_string' => $trans_string,
                 'photo_type' => $photo_type,
-                'nozzle_qr' => $nozzle_qr
+                'nozzle_qr' => $nozzle_qr,
+                'date' => $date,
+                'date_time' => $date_time 
             ]);
 
             $ret_array['success'] = true;
@@ -106,6 +109,7 @@ final class SnapPhotoController
 
         // HTTP response
         // $otp_data = array("otp" => "working");
+        sleep(1);
         $response->getBody()->write((string)json_encode($ret_array));
         return $response
             ->withHeader('Content-Type', 'application/json')

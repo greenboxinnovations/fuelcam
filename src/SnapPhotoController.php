@@ -140,7 +140,9 @@ final class SnapPhotoController
         for ($i = 0; $i < $length; $i++) {
             $trans_string .= $characters[rand(0, $charactersLength - 1)];
         }
-    
+        
+
+        $trans_string = "P".$this->pump_id.$trans_string;
         
         $stmt = $this->pdo->prepare('SELECT 1 FROM trans_string WHERE trans_string = :trans_string');
         $stmt->execute([

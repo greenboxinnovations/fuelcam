@@ -63,9 +63,9 @@ final class LoginController
             
 
             // check if user is operator
-            if($row['role'] != "operator"){
-                return $this->errorReturn($request, $response, "Access Denied");
-            }
+            // if($row['role'] != "operator"){
+            //     return $this->errorReturn($request, $response, "Access Denied");
+            // }
 
             // check if rates are set
             $stmt2 = $this->pdo->prepare('SELECT * FROM rates WHERE pump_id = :pump_id and date = :date ORDER BY rate_id DESC LIMIT 1');
@@ -87,6 +87,8 @@ final class LoginController
                 $ret_array['rate_set'] = true;
                 $ret_array['petrol_rate'] = $row2['petrol'];
                 $ret_array['diesel_rate'] = $row2['diesel'];
+
+                $ret_array['role'] = $row['role'];
 
                 $ret_array['user_id'] = (int) $row['user_id'];
                 $ret_array['pump_id'] = (int) $pump_id;

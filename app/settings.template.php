@@ -47,10 +47,11 @@ return function (ContainerBuilder $containerBuilder) {
             "ref_token_expiry" => "+1 year",
             "auth_token_expiry" => "+3 hour",
             "token_key" => "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9",
-            "pump_id" => -999999,
+            "pump_id" => -999,
             "set_rates_per_day" => 2, // 2 rates can be set per day
             "android_double_entry_time_seconds" => 20, // android prevent double tap , 20 seconds
             "printer_ip" => "192.168.1.101",
-            "print" => true
+            "print" => false
+        ], 
     ]);
 };

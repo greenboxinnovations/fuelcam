@@ -73,8 +73,23 @@ final class TransactionsController
         $liters     = $request->getParsedBody()['liters'];
         
         $user_id    = $request->getParsedBody()['user_id'];
-        $pre_shift  = $request->getParsedBody()['shift'];       // change shift letters to numeric mapping
-        $shift 		= ($pre_shift == "a") ? 1 : 2;
+        $pre_shift  = $request->getParsedBody()['shift'];
+
+         // change shift letters to numeric mapping
+        switch ($pre_shift) {
+                   case 'a':
+                       $shift = 1;
+                       break;
+                    case 'b':
+                        $shift = 2;
+                    break;
+                    case 'c':
+                        $shift = 3;
+                    break;
+
+               }       
+        // change shift letters to numeric mapping
+        //$shift 		= ($pre_shift == "a") ? 1 : 2;
 
         $receipt_no = $request->getParsedBody()['receipt_no'];
 

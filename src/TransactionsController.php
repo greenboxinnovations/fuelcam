@@ -133,8 +133,11 @@ final class TransactionsController
         $trans_id = $this->insertTransaction($pump_id, $cust_id, $car_id, $user_id, $car_fuel, $amount, $fuel_rate, $liters, $shift, $trans_string, $receipt_no, $nozzle_no);
 
         // 6. print n receipts
-        $this->printReceipts($trans_id,$print_num);
-
+        try {
+            $this->printReceipts($trans_id,$print_num);    
+        } catch (Exception $e) {
+            
+        }
         // 7. update sync table
         
 

@@ -65,6 +65,12 @@ final class ScanCarController
         else if($row == -3){
             $ret_array['msg'] = "Car is inactive";
         }else{
+
+            if($this->isCarBusy($row['car_no_plate'])){
+                return $this->errorReturn($request, $response, "Vehicle already started");
+            }
+
+
             $ret_array['success']   = true;
             $ret_array['cust_id']   = (int)$row['cust_id'];
             $ret_array['cust_name'] = $row['cust_disp_name'];
@@ -141,6 +147,18 @@ final class ScanCarController
             return false;
         }        
 
+        return true;
+    }
+
+    private function isCarBusy($no_plate){        
+        $stmt = $this->pdo->prepare('SELECT * FROM cameras WHERE no_plate =:no_plate');
+        $stmt->execute([
+            'no_plate'     => $no_plate
+        ]); 
+        $row = $stmt->fetch();
+        if (!$row) {
+            return false;
+        }
         return true;
     }
 }

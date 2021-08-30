@@ -38,14 +38,16 @@ final class SnapPhotoController
 
         // check post vars
         if ( !array_key_exists("photo_type", $postData) ||             
-             !array_key_exists("nozzle_qr", $postData)
+             !array_key_exists("nozzle_qr", $postData) || 
+             !array_key_exists("no_plate", $postData)
         ) {
             return $this->errorReturn($request, $response, "Access Denied");
         }
 
         // assign vars        
         $photo_type  = $request->getParsedBody()['photo_type'];    
-        $nozzle_qr  = $request->getParsedBody()['nozzle_qr'];    
+        $nozzle_qr  = $request->getParsedBody()['nozzle_qr']; 
+        $no_plate  = $request->getParsedBody()['no_plate'];    
 
         // ret
         $ret_array = array();
@@ -66,13 +68,14 @@ final class SnapPhotoController
         if($photo_type == 'start') {
             $trans_string = $this->generateRand();
 
-            $stmt = $this->pdo->prepare('UPDATE cameras SET status = 1, trans_string = :trans_string, type = :photo_type, date = :date, date_time = :date_time WHERE cam_qr_code = :nozzle_qr');
+            $stmt = $this->pdo->prepare('UPDATE cameras SET status = 1, trans_string = :trans_string, type = :photo_type, date = :date, date_time = :date_time, no_plate = :no_plate WHERE cam_qr_code = :nozzle_qr');
             $stmt->execute([
                 'trans_string' => $trans_string,
                 'photo_type' => $photo_type,
                 'nozzle_qr' => $nozzle_qr,
                 'date' => $date,
-                'date_time' => $date_time 
+                'date_time' => $date_time,
+                'no_plate' => $no_plate
             ]);
 
             $ret_array['success'] = true;
@@ -98,7 +101,7 @@ final class SnapPhotoController
             }
 
             // update the camera / nozzle again for C++
-            $stmt = $this->pdo->prepare('UPDATE cameras SET status = 1, type = :photo_type WHERE cam_qr_code = :nozzle_qr');
+            $stmt = $this->pdo->prepare('UPDATE cameras SET status = 1, no_plate=NULL, type = :photo_type WHERE cam_qr_code = :nozzle_qr');
             $stmt->execute([
                 'photo_type' => $photo_type,
                 'nozzle_qr' => $nozzle_qr

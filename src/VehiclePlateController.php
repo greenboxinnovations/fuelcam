@@ -41,10 +41,15 @@ final class VehiclePlateController
             return $this->errorReturn($request, $response, "Enter Vehicle Num");
         }
 
+
+
         
         $no_plate = strtolower(preg_replace("/[\W_]+/u", '', $no_plate));
 
     	
+        if($this->isCarBusy($no_plate)){
+            return $this->errorReturn($request, $response, "Vehicle already started");
+        }
         
 
         $stmt = $this->pdo->prepare('SELECT a.*,b.cust_disp_name,b.cust_id FROM cars a
@@ -90,5 +95,17 @@ final class VehiclePlateController
         return $response
             ->withHeader('Content-Type', 'application/json')
             ->withStatus(409);
+    }
+
+    private function isCarBusy($no_plate){        
+        $stmt = $this->pdo->prepare('SELECT * FROM cameras WHERE no_plate =:no_plate');
+        $stmt->execute([
+            'no_plate'     => $no_plate
+        ]); 
+        $row = $stmt->fetch();
+        if (!$row) {
+            return false;
+        }
+        return true;
     }
 }

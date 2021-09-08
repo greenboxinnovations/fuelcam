@@ -107,6 +107,19 @@ final class SnapPhotoController
                 'nozzle_qr' => $nozzle_qr
             ]);
 
+
+        }
+        else if($photo_type == 'cancel') {
+           
+             // update the camera / nozzle again for C++
+            $stmt = $this->pdo->prepare('UPDATE cameras SET status = 1, no_plate=NULL, type = :photo_type WHERE cam_qr_code = :nozzle_qr');
+            $stmt->execute([
+                'photo_type' => 'stop',
+                'nozzle_qr' => $nozzle_qr
+            ]);
+
+            $ret_array['success'] = true;
+
         }
 
 

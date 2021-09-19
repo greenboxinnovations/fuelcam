@@ -41,9 +41,16 @@ final class LoginController
             return $this->errorReturn($request, $response, "Access Denied");
         }
 
+        // check post vars
+        if ((!array_key_exists("version", $postData)) || ($request->getParsedBody()['version'] != '1.5')) {
+            return $this->errorReturn($request, $response, "App Version Mismatch");
+        }
+
+
         // assign vars
         $myuser  = $request->getParsedBody()['name'];
-        $pass    = $request->getParsedBody()['pass'];       
+        $pass    = $request->getParsedBody()['pass']; 
+        $version    = $request->getParsedBody()['version'];       
 
         // ret
         $ret_array = array();
@@ -102,6 +109,8 @@ final class LoginController
         }else{
             $ret_array['msg'] = "Password Error";
         }
+
+        // sleep(12);
 
 
         // HTTP response

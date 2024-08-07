@@ -88,6 +88,9 @@ final class LoginController
                 $ret_array['rate_set'] = false;
                 $ret_array['user_id'] = (int) $row['user_id'];
                 $ret_array['pump_id'] = (int) $pump_id;
+                 $ret_array['role'] = $row['role'];
+
+
             }
             else{
                 $ret_array['success'] = true;
@@ -95,7 +98,9 @@ final class LoginController
                 $ret_array['petrol_rate'] = $row2['petrol'];
                 $ret_array['diesel_rate'] = $row2['diesel'];
 
-                $ret_array['role'] = $row['role'];
+
+                $ret_array['role'] = $row['role'];               
+
 
                 $ret_array['user_id'] = (int) $row['user_id'];
                 $ret_array['pump_id'] = (int) $pump_id;
